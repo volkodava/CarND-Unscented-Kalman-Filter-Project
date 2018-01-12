@@ -64,9 +64,20 @@ public:
   ///* Augmented state dimension
   int n_aug_;
 
+  ///* Sigma state dimension
+  int n_sig_;
+
   ///* Sigma point spreading parameter
   double lambda_;
 
+  ///* Radar measurement noise covariance matrix
+  MatrixXd R_laser_;
+
+  ///* Laser measurement noise covariance matrix
+  MatrixXd R_radar_;
+
+  // previous timestamp
+  long long previous_timestamp_;
 
   /**
    * Constructor

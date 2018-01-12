@@ -1,6 +1,7 @@
 #include "ukf.h"
 #include "Eigen/Dense"
 #include <iostream>
+static const double XY_THRESH = 1e-4;
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -18,11 +19,23 @@ UKF::UKF() {
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
 
+  ///* State dimension
+  n_x_ = 5;
+
+  ///* Augmented state dimension
+  n_aug_ = 7;
+
+  ///* Sigma state dimension
+  n_sig_ = 2 * n_aug_ + 1;
+
+  ///* Sigma point spreading parameter
+  lambda_ = 3 - n_x_;
+
   // initial state vector
-  x_ = VectorXd(5);
+  x_ = VectorXd(n_x_);
 
   // initial covariance matrix
-  P_ = MatrixXd(5, 5);
+  P_ = MatrixXd(n_x_, n_x_);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
   std_a_ = 30;
@@ -54,6 +67,38 @@ UKF::UKF() {
 
   Hint: one or more values initialized above might be wildly off...
   */
+
+  // initialize predicted sigma points matrix
+  Xsig_pred_.fill(0.0);
+
+  // initialize state vector: [px, py, v, yaw_angle, yaw_rate]
+  x_ << 1, 1, 0, 0, 0;
+
+  // initialize state covariance matrix P
+  P_ << 1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1;
+
+  // create vector for weights
+  weights_ = VectorXd(n_sig_);
+  weights_(0) = lambda_/(lambda_+n_aug_);;
+  for (int i=1; i<n_sig_; i++) {
+    weights_(i) = 0.5/(n_aug_+lambda_);
+  }
+
+  // initialize radar measurement noise covariance matrix
+  R_radar_ = MatrixXd(3, 3);
+  R_radar_ << std_radr_ * std_radr_, 0, 0,
+              0, std_radphi_ * std_radphi_, 0,
+              0, 0, std_radrd_ * std_radrd_;
+
+  // initialize laser measurement noise covariance matrix
+  R_laser_ = MatrixXd(2, 2);
+  R_laser_ << std_laspx_ * std_laspx_, 0,
+              0, std_laspy_ * std_laspy_;
+
+  previous_timestamp_ = 0;
 }
 
 UKF::~UKF() {}
@@ -69,6 +114,62 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
+  if (!is_initialized_) {
+    double x = 0.0,
+        y = 0.0,
+        v = 0.0,
+        yaw_angle = 0.0,
+        yaw_rate = 0.0;
+
+    if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+      // range (radial distance from origin to the tracking object such as pedestrian, car, etc.)
+      double rho = meas_package.raw_measurements_[0];
+      // bearing (angle between rho and x)
+      double phi = meas_package.raw_measurements_[1];
+      // radial velocity (change of rho - range rate)
+      double rhoDot = meas_package.raw_measurements_[2];
+
+      // Convert radar from polar to cartesian coordinates
+      x = rho * cos(phi);
+      y = rho * sin(phi);
+      double vx = rhoDot * cos(phi);
+      double vy = rhoDot * sin(phi);
+
+      // find v (hypotenuse) using vx and vy
+      v = sqrt(pow(vx, 2) + pow(vy, 2));
+    } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+      x = meas_package.raw_measurements_[0],
+          y = meas_package.raw_measurements_[1];
+    }
+
+    if (fabs(x) < XY_THRESH) {
+      x = XY_THRESH;
+    }
+    if (fabs(y) < XY_THRESH) {
+      y = XY_THRESH;
+    }
+
+    x_ << x, y, v, yaw_angle, yaw_rate;
+
+    // done initializing, no need to predict or update
+    previous_timestamp_ = meas_package.timestamp_;
+    is_initialized_ = true;
+    return;
+  }
+
+  // compute the time elapsed between the current and previous measurements
+  double dt = (meas_package.timestamp_ - previous_timestamp_) / 1000000.0; // dt - expressed in seconds
+  previous_timestamp_ = meas_package.timestamp_;
+
+  // run prediction
+  Prediction(dt);
+  if (meas_package.sensor_type_ == MeasurementPackage::RADAR && use_radar_) {
+    // Radar updates
+    UpdateRadar(meas_package);
+  } else if (meas_package.sensor_type_ == MeasurementPackage::LASER && use_laser_) {
+    // Laser updates
+    UpdateLidar(meas_package);
+  }
 }
 
 /**
