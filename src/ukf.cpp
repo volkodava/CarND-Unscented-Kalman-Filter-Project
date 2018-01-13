@@ -74,7 +74,8 @@ UKF::UKF() {
   Hint: one or more values initialized above might be wildly off...
   */
 
-  // initialize predicted sigma points matrix
+  // initialize predicted sigma points matrix with predicted sigma points as columns
+  Xsig_pred_ = MatrixXd(n_x_, n_sig_);
   Xsig_pred_.fill(0.0);
 
   // initialize state vector: [px, py, v, yaw_angle, yaw_rate]
@@ -223,9 +224,6 @@ void UKF::Prediction(double delta_t) {
   }
 
   // *** PREDICT SIGMA POINTS ***
-  //create matrix with predicted sigma points as columns
-  MatrixXd Xsig_pred = MatrixXd(n_x_, n_sig_);
-
   //predict sigma points
   for (int i = 0; i< n_sig_; i++)
   {
@@ -264,25 +262,25 @@ void UKF::Prediction(double delta_t) {
     yawd_p = yawd_p + nu_yawdd*delta_t;
 
     //write predicted sigma point into right column
-    Xsig_pred(0,i) = px_p;
-    Xsig_pred(1,i) = py_p;
-    Xsig_pred(2,i) = v_p;
-    Xsig_pred(3,i) = yaw_p;
-    Xsig_pred(4,i) = yawd_p;
+    Xsig_pred_(0,i) = px_p;
+    Xsig_pred_(1,i) = py_p;
+    Xsig_pred_(2,i) = v_p;
+    Xsig_pred_(3,i) = yaw_p;
+    Xsig_pred_(4,i) = yawd_p;
   }
 
   // *** PREDICT MEAN AND COVARIANCE ***
   //predicted state mean
   x_.fill(0.0);
   for (int i = 0; i < n_sig_; i++) {  //iterate over sigma points
-    x_ = x_ + weights_(i) * Xsig_pred.col(i);
+    x_ = x_ + weights_(i) * Xsig_pred_.col(i);
   }
 
   //predicted state covariance matrix
   P_.fill(0.0);
   for (int i = 0; i < n_sig_; i++) {  //iterate over sigma points
     // state difference
-    VectorXd x_diff = Xsig_pred.col(i) - x_;
+    VectorXd x_diff = Xsig_pred_.col(i) - x_;
     //angle normalization
     while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
     while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
