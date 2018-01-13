@@ -81,10 +81,11 @@ UKF::UKF() {
   x_ << 1, 1, 0, 0, 0;
 
   // initialize state covariance matrix P
-  P_ << 1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1;
+  P_ << 1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 1;
 
   // create vector for weights
   weights_ = VectorXd(n_sig_);
