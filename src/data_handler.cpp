@@ -41,8 +41,13 @@ class DataHandler {
     out << "vx_gt" << "\t";
     out << "vy_gt" << "\t";
 
+    out << "rmse_x" << "\t";
+    out << "rmse_y" << "\t";
+    out << "rmse_vx" << "\t";
+    out << "rmse_vy" << "\t";
+
     out << "NIS" << "\n";
-  }
+}
 
  public:
   DataHandler(string filepath) {
@@ -124,6 +129,16 @@ class DataHandler {
     st << py_gt << "\t";  // py_gt (ground truth)
     st << vx_gt << "\t";  // vx_gt (ground truth)
     st << vy_gt << "\t";  // vy_gt (ground truth)
+
+    double rmse_x = RMSE(0);
+    double rmse_y = RMSE(1);
+    double rmse_vx = RMSE(2);
+    double rmse_vy = RMSE(3);
+
+    st << rmse_x << "\t";   // rmse_x
+    st << rmse_y << "\t";   // rmse_y
+    st << rmse_vx << "\t";  // rmse_vx
+    st << rmse_vy << "\t";  // rmse_vy
 
     st << NIS << "\t";  // NIS (Normalized innovation squared)
     st << endl;
