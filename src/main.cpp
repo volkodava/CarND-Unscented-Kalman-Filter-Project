@@ -4,6 +4,7 @@
 #include <math.h>
 #include "ukf.h"
 #include "tools.h"
+#include "data_handler.cpp"
 
 using namespace std;
 
@@ -30,6 +31,9 @@ int main()
 {
   uWS::Hub h;
 
+  // Data handler class to write calucalation output to file
+  DataHandler dh("output.txt");
+
   // Create a Kalman Filter instance
   UKF ukf;
 
@@ -38,7 +42,7 @@ int main()
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
-  h.onMessage([&ukf,&tools,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&ukf,&dh,&tools,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -139,6 +143,9 @@ int main()
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
           // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+
+          // log data
+          dh.write(meas_package, ukf, estimations, ground_truth, RMSE);
 	  
         }
       } else {
@@ -165,11 +172,13 @@ int main()
     }
   });
 
-  h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+  h.onConnection([&h,&dh](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+    dh.openFile();
     std::cout << "Connected!!!" << std::endl;
   });
 
-  h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+  h.onDisconnection([&h,&dh](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+    dh.closeFile();
     ws.close();
     std::cout << "Disconnected" << std::endl;
   });
