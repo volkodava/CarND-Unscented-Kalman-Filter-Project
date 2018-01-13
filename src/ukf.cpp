@@ -1,7 +1,6 @@
 #include "ukf.h"
 #include "Eigen/Dense"
 #include <iostream>
-static const double XY_THRESH = 1e-4;
 
 using namespace std;
 using Eigen::MatrixXd;

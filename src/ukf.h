@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+static const double XY_THRESH = 1e-4;
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;

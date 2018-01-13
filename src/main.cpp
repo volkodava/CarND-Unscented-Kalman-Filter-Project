@@ -145,7 +145,7 @@ int main()
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 
           // log data
-          dh.write(meas_package, ukf, estimations, ground_truth, RMSE);
+          dh.write(meas_package, ukf, gt_values, RMSE);
 	  
         }
       } else {
