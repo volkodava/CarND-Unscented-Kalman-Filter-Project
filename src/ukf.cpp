@@ -104,7 +104,7 @@ UKF::UKF() {
   R_laser_ << std_laspx_ * std_laspx_, 0,
               0, std_laspy_ * std_laspy_;
 
-  previous_timestamp_ = 0;
+  time_us_ = 0;
 }
 
 UKF::~UKF() {}
@@ -158,14 +158,14 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     x_ << x, y, v, yaw_angle, yaw_rate;
 
     // done initializing, no need to predict or update
-    previous_timestamp_ = meas_package.timestamp_;
+    time_us_ = meas_package.timestamp_;
     is_initialized_ = true;
     return;
   }
 
   // compute the time elapsed between the current and previous measurements
-  double dt = (meas_package.timestamp_ - previous_timestamp_) / 1000000.0; // dt - expressed in seconds
-  previous_timestamp_ = meas_package.timestamp_;
+  double dt = (meas_package.timestamp_ - time_us_) / 1000000.0; // dt - expressed in seconds
+  time_us_ = meas_package.timestamp_;
 
   // run prediction
   Prediction(dt);

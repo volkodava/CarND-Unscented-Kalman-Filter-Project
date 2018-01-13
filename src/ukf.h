@@ -32,6 +32,7 @@ public:
   MatrixXd Xsig_pred_;
 
   ///* time when the state is true, in us
+  ///* previous timestamp
   long long time_us_;
 
   ///* Process noise standard deviation longitudinal acceleration in m/s^2
@@ -81,9 +82,6 @@ public:
 
   ///* Radar measurement noise covariance matrix
   MatrixXd R_radar_;
-
-  ///* previous timestamp
-  long long previous_timestamp_;
 
   ///* NIS for radar
   double NIS_radar_;
