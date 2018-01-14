@@ -110,11 +110,11 @@ class DataHandler {
       NIS = ukf.NIS_laser_;
     }
 
-    if (fabs(px_measured) < XY_THRESH) {
-      px_measured = XY_THRESH;
+    if (fabs(px_measured) < EPS) {
+      px_measured = EPS;
     }
-    if (fabs(py_measured) < XY_THRESH) {
-      py_measured = XY_THRESH;
+    if (fabs(py_measured) < EPS) {
+      py_measured = EPS;
     }
 
     st << px_measured << "\t";  // px_measured

@@ -6,12 +6,16 @@
 #include <vector>
 #include <string>
 #include <fstream>
-static const double XY_THRESH = 1e-4;
+static const double EPS = 1e-4;
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 class UKF {
+private:
+  ///* normalize the angle based on fmod or atan2
+  void NormalizeAngle(double& phi);
+
 public:
 
   ///* initially set to false, set to true in first call of ProcessMeasurement
